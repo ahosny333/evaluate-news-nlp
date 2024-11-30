@@ -6,7 +6,7 @@ const axios = require('axios');
 
 dotenv.config();
 
-//const API_KEY = '409c810bc4b1e1c1c7a2ceb9133cdbea';
+
 const API_KEY = process.env.API_KEY;
 
 async function analyzeSentiment(text) {
@@ -44,7 +44,7 @@ app.use(bodyParser.json());
 
 console.log(__dirname);
 console.log(API_KEY);
-// Variables for url and api key
+
 
 
 app.get('/test', function (req, res) {
@@ -74,6 +74,3 @@ app.listen(8000, function () {
 
 
 
-
-// Example usage
-//analyzeSentiment('I love programming with Node.js!');
