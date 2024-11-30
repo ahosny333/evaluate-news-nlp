@@ -1,74 +1,47 @@
-/**
- * @jest-environment jsdom
- */
-// Import the js file to test
-import { handleSubmit } from "../src/client/js/formHandler"
 
-// Mock the `fetch` function to simulate API calls
-global.fetch = jest.fn();
+import * as formHandler from '../src/client/js/formHandler'; 
 
-// Mock `document.getElementById` for accessing and updating DOM elements
-document.getElementById = jest.fn((id) => {
-  const elements = {
-    name: { value: 'I like football' }, // Simulated input field value
-    results: { innerHTML: '' }, // Simulated results area
-  };
-  return elements[id];
+
+global.fetch = jest.fn(() =>
+  Promise.resolve({
+      json: () => Promise.resolve({ score_tag: 'POSITIVE',subjectivity:'subjective' }),
+  })
+);
+
+
+test('handleSubmit is imported', () => {
+  console.log('handleSubmit:', formHandler.handleSubmit);
+  expect(typeof formHandler.handleSubmit).toBe('function');
 });
 
-describe('handleSubmit', () => {
-  beforeEach(() => {
-    jest.clearAllMocks(); // Reset mocks before each test
-  });
 
-  test('sends API request and updates the DOM with results', async () => {
-    // Mock API responses
-    fetch
-      .mockResolvedValueOnce({
-        json: jest.fn().mockResolvedValueOnce({ key: 'mock_api_key' }),
-      }) // First fetch for `/get_api`
-      .mockResolvedValueOnce({
-        json: jest.fn().mockResolvedValueOnce({
-          status: { code: '0' },
-          score_tag: 'P+',
-          subjectivity: 'SUBJECTIVE',
-        }),
-      }); // Second fetch for MeaningCloud API
 
-    // Mock event
-    const mockEvent = { preventDefault: jest.fn() };
+test('handleSubmit calls with valid url and updates the DOM', async () => {
+    document.body.innerHTML = `
+        <form id="urlForm">
+            <input id="name" value="http://www.valid_url.com" />
+            <div id="results"></div>
+        </form>
+    `;
+    const event = { preventDefault: jest.fn() };
 
-    // Call the handleSubmit function
-    await handleSubmit(mockEvent);
+    await formHandler.handleSubmit(event);
+    expect(event.preventDefault).toHaveBeenCalled();
+    expect(global.fetch).toHaveBeenCalledWith('http://localhost:8000/analyze-sentiment', expect.any(Object));
+    expect(document.getElementById('results').innerHTML).toBe('score_tag :POSITIVE<br> subjectivity : subjective');
+});
 
-    // Assertions
-    expect(mockEvent.preventDefault).toHaveBeenCalled(); // Check event default is prevented
-    expect(fetch).toHaveBeenCalledTimes(2); // Ensure two fetch calls are made
-    expect(fetch).toHaveBeenCalledWith('/get_api'); // First call is to `/get_api`
-    expect(document.getElementById('results').innerHTML).toBe(
-      'score_tag :P+<br> subjectivity : SUBJECTIVE'
-    ); // Check results area is updated
-  });
+test('handleSubmit calls post_data and updates the DOM when call by invalid url', async () => {
+  document.body.innerHTML = `
+      <form id="urlForm">
+          <input id="name" value="invalid url" />
+          <div id="results"></div>
+      </form>
+  `;
+  const event = { preventDefault: jest.fn() };
 
-  test('handles API error gracefully', async () => {
-    fetch
-      .mockResolvedValueOnce({
-        json: jest.fn().mockResolvedValueOnce({ key: 'mock_api_key' }),
-      }) // First fetch for `/get_api`
-      .mockResolvedValueOnce({
-        json: jest.fn().mockResolvedValueOnce({
-          status: { code: '1', msg: 'Error occurred' },
-        }),
-      }); // Second fetch for MeaningCloud API with an error
+  await formHandler.handleSubmit(event);
 
-    const mockEvent = { preventDefault: jest.fn() };
-
-    // Call the handleSubmit function
-    await handleSubmit(mockEvent);
-
-    // Check that results are not updated with valid data
-    expect(document.getElementById('results').innerHTML).toBe(
-      'score_tag :undefined<br> subjectivity : undefined'
-    );
-  });
+  expect(event.preventDefault).toHaveBeenCalled();
+  expect(document.getElementById('results').innerHTML).toBe('not valid url');
 });

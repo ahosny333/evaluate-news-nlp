@@ -16,7 +16,7 @@ async function analyzeSentiment(text) {
         new URLSearchParams({
           key: API_KEY, //  API key
           lang: 'en',   // Language of the text (e.g., 'en' for English)
-          txt: text,    // The text to analyze
+          url: text,    // The text to analyze
         })
       );
   
@@ -50,11 +50,7 @@ console.log(API_KEY);
 app.get('/test', function (req, res) {
     res.send("This is the server API page, you may access its services via the client app.");
 });
-app.get('/get_api', function (req, res) {
-  const api ={};
-  api.key = API_KEY;
-  res.send(api);
-});
+
 
 // POST Route
 

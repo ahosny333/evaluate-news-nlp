@@ -50,7 +50,11 @@ console.log(API_KEY);
 app.get('/test', function (req, res) {
     res.send("This is the server API page, you may access its services via the client app.");
 });
-
+app.get('/get_api', function (req, res) {
+  const api ={};
+  api.key = API_KEY;
+  res.send(api);
+});
 
 // POST Route
 
